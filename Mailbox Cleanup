@@ -1,0 +1,17 @@
+$LiveCred = get-credential
+
+# Connect to Exchange
+$session = new-pssession -configurationname microsoft.exchange -connectionuri https://ps.outlook.com/powershell -credential $LiveCred -authentication basic -allowredirection
+
+import-pssession $session
+
+# Simple mailbox statistic check for size
+Get-MailboxStatistics mailboxname@contoso.com | Format-List Name,DeletedItemCount,ItemCount,TotalDeletedItemSize,TotalItemSize
+
+# Clean out mailbox by searching for a phrase with a wildcard
+$mbx = get-mailbox mailboxname@contoso.com;
+Do {
+$result = Search-Mailbox -Identity $mbx.Identity -SearchQuery 'subject:"Phrase will wildcard*"' -DeleteContent -force -WarningAction Silentlycontinue;
+$result | Out-file c:\temp\mailsearch.log -append;
+write-Host "Search result for username: " + $result.resultitemscount -ForegroundColor Green;
+} Until ($result.resultitemscount -eq 0)
