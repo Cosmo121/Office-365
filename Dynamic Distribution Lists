@@ -1,0 +1,46 @@
+########################## Pre-reqs #################################
+
+# Check to see if you have the EOM Module installed already
+Import-Module ExchangeOnlineManagement; Get-Module ExchangeOnlineManagement
+
+# If yes, update it
+Update-Module -Name ExchangeOnlineManagement -Scope CurrentUser
+
+# If no, install it
+Install-Module -Name ExchangeOnlineManagement -Scope CurrentUser
+
+# Confirm Installed
+Import-Module ExchangeOnlineManagement; Get-Module ExchangeOnlineManagement
+
+
+############################ Connect ################################
+
+# Connect to EO
+Connect-ExchangeOnline -UserPrincipalName user@domain.com -ShowProgress $true
+
+
+############################ Dynamic Distros ###########################
+
+# List all dynamic distros
+Get-DynamicDistributionGroup
+
+# Get info about a specific dynamic distro
+Get-DynamicDistributionGroup -Identity "all-Company" | Format-List
+
+# list all members of a dynamic distro
+$DD = Get-DynamicDistributionGroup "all-Company"; Get-Recipient -RecipientPreviewFilter $DD.RecipientFilter -OrganizationalUnit $DD.RecipientContainer
+
+# Change A DD filter
+Set-DynamicDistributionGroup -Identity "all-Company" -RecipientFilter "((RecipientType -eq 'UserMailbox') -and (Office -eq 'Main Office'))"
+
+# Pull all members
+$DD = Get-DynamicDistributionGroup "all-Company"
+Get-Recipient -ResultSize Unlimited -RecipientPreviewFilter $DD.RecipientFilter -OrganizationalUnit $DD.RecipientContainer | Format-Table Name,Primary*
+
+
+############################ Documentation ###########################
+
+<#
+Connecting to Exchange Online: https://docs.microsoft.com/en-us/powershell/exchange/connect-to-exchange-online-powershell
+Get-DynamicDistributionGroup: https://docs.microsoft.com/en-us/powershell/module/exchange/get-dynamicdistributiongroup
+#>
