@@ -1,22 +1,40 @@
-# Store credentials
-$LiveCred = Get-Credential
+########################## Pre-reqs #################################
 
-# Connect to 365
-$Session = New-PSSession -ConfigurationName Microsoft.Exchange -ConnectionURI https://ps.outlook.com/powershell/ -Credential $LiveCred -Authentication Basic -AllowRedirection
+# Check to see if you have the EOM Module installed already
+Import-Module ExchangeOnlineManagement; Get-Module ExchangeOnlineManagement
 
-# user1 is placeholder for the user with calendar
-# View current permissions on user calendar
-Get-MailboxFolderPermission user1:\calendar
+# If yes, update it
+Update-Module -Name ExchangeOnlineManagement -Scope CurrentUser
 
-# user2 is placeholder for user you want to have permissions
-# Give user permissions
-Add-MailboxFolderPermission -Identity user1@avidxchange.com:\calendar -user user2@avidxchange.com -AccessRights Editor
+# If no, install it
+Install-Module -Name ExchangeOnlineManagement -Scope CurrentUser
 
-# Set default permission for $user1
-Set-MailboxFolderPermission -Identity user1@avidxchange.com:\calendar -User Default -AccessRights Reviewer
+# Confirm Installed
+Import-Module ExchangeOnlineManagement; Get-Module ExchangeOnlineManagement
 
-# Remove user2 from calendar
-Remove-MailboxFolderPermission -Identity user1@avidxchange.com:\calendar -user2@avidxchange.com
 
-# Disconnect
-Remove-PSSession $Session
+############################ Connect ################################
+
+# Connect to EO
+Connect-ExchangeOnline -UserPrincipalName user@domain.com -ShowProgress $true
+
+
+############################ Manage Calendar Permissions ################################
+
+# View current permissions for user's calendar
+Get-MailboxFolderPermission -Identity user@domain.com:\Calendar | ft Identity,FolderName,User,AccessRights,SharingPermissionFlags
+
+# Set user to have Editor permissions to user's calendar | Note that Delegate will be able to do everything except view private events
+# | Note that -SendNotificationToUser is true and the person will get an email to accept the permissions
+Set-MailboxFolderPermission -Identity user@domain.com:\Calendar -User user@domain.com -AccessRights Editor -SharingPermissionFlags Delegate -SendNotificationToUser $true
+
+# Remove permissions
+Remove-MailboxFolderPermission -Identity user@domain.com:\Calendar -User user@domain.com
+
+
+############################ Documentation ################################
+
+<#
+Setting up EXO V2: https://docs.microsoft.com/en-us/powershell/exchange/connect-to-exchange-online-powershell
+Get-MailboxFolderPermissions: https://docs.microsoft.com/en-us/powershell/module/exchange/get-mailboxfolderpermission
+#>
